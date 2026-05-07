@@ -312,7 +312,22 @@ body {
   transition: background .2s;
 }
 .btn-report:hover { background: #1559cc; }
-.btn-export-xl {
+.btn-sheets {
+  flex: 1;
+  background: #0F9D58;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 13px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s;
+}
+.btn-sheets:hover { background: #0b7a44; }
+.btn-sheets:disabled { opacity: .7; cursor: wait; }
   background: var(--ok-light);
   color: var(--ok);
   border: 1.5px solid var(--ok);
@@ -796,7 +811,8 @@ textarea.form-input { resize: vertical; min-height: 72px; }
 <!-- BOTTOM BAR -->
 <div class="bottom-bar">
   <button class="btn-export-xl" onclick="exportExcel()">📊 Excel</button>
-  <button class="btn-report" onclick="openReport()">📋 Ver Relatório & PDF</button>
+  <button class="btn-sheets" id="btn-enviar-sheets" onclick="enviarParaSheets()">☁️ Enviar para Sheets</button>
+  <button class="btn-report" onclick="openReport()">📋 Relatório</button>
 </div>
 
 <!-- MODAL FORM (slide-up sheet) -->
@@ -1341,7 +1357,112 @@ function exportPDF() {
   setTimeout(() => printWin.focus(), 300);
 }
 
-// ── LIGHTBOX ─────────────────────────────────────────────────────────────
+// ── CONFIG GOOGLE SHEETS ──────────────────────────────────────────────────
+// Após instalar o script, cole sua URL aqui:
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxgc1zeNglKf6uNUz7t-kKqcEhS6XftYrnmiM0xAgcj6V-fvSFd-IgAEQNirLIMvEXXWg/exec';
+
+// ── COMPRESSÃO DE FOTO ────────────────────────────────────────────────────
+function comprimirFoto(dataUrl, maxWidth = 900, qualidade = 0.72) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', qualidade));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ── ENVIAR PARA GOOGLE SHEETS ─────────────────────────────────────────────
+async function enviarParaSheets() {
+  if (APPS_SCRIPT_URL === 'COLE_SUA_URL_AQUI') {
+    alert('⚠️ Configure a URL do Apps Script primeiro!\n\nSiga as instruções do arquivo SCRIPT_COLAR_NO_SHEETS.js');
+    return;
+  }
+
+  const allOccs = Object.values(data).flat();
+  if (allOccs.length === 0) {
+    alert('Nenhuma ocorrência para enviar. Registre pelo menos uma ocorrência antes de enviar.');
+    return;
+  }
+
+  const galpao   = document.getElementById('meta-galpao').value   || '';
+  const inspetor = document.getElementById('meta-inspetor').value || '';
+  const dataV    = document.getElementById('meta-data').value     || '';
+  const turno    = document.getElementById('meta-turno').value    || '';
+  const tipo     = document.getElementById('meta-tipo').value     || '';
+
+  if (!galpao || !inspetor) {
+    alert('Preencha o Galpão e o Inspetor antes de enviar.');
+    return;
+  }
+
+  // Botão de loading
+  const btn = document.getElementById('btn-enviar-sheets');
+  btn.textContent = '⏳ Enviando...';
+  btn.disabled = true;
+
+  try {
+    // Comprimir todas as fotos
+    const occsParaEnvio = [];
+    for (const sec of SECTIONS) {
+      for (const occ of data[sec.id]) {
+        const photosComprimidas = await Promise.all(
+          occ.photos.map(p => comprimirFoto(p))
+        );
+        occsParaEnvio.push({
+          secao:    sec.name,
+          setor:    occ.setor,
+          desc:     occ.desc,
+          prio:     occ.prio,
+          situacao: occ.situacao,
+          os:       occ.os,
+          photos:   photosComprimidas,
+        });
+      }
+    }
+
+    const payload = {
+      action: 'salvarVistoria',
+      vistoria: { galpao, inspetor, data: dataV, turno, tipo,
+        id: 'VST-' + Date.now() },
+      ocorrencias: occsParaEnvio,
+    };
+
+    const res  = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.ok) {
+      btn.textContent = '✅ Enviado!';
+      btn.style.background = 'var(--ok)';
+      setTimeout(() => {
+        btn.textContent = '☁️ Enviar para Sheets';
+        btn.style.background = '';
+        btn.disabled = false;
+      }, 3000);
+      alert(`✅ Vistoria enviada com sucesso!\n\nID: ${json.idVistoria}\n${json.totalOcorrencias} ocorrência(s) salva(s) no Google Sheets.\nFotos salvas no Google Drive.`);
+    } else {
+      throw new Error(json.erro || 'Erro desconhecido');
+    }
+  } catch (err) {
+    btn.textContent = '❌ Erro — tente novamente';
+    btn.style.background = 'var(--danger)';
+    setTimeout(() => {
+      btn.textContent = '☁️ Enviar para Sheets';
+      btn.style.background = '';
+      btn.disabled = false;
+    }, 4000);
+    console.error(err);
+    alert('Erro ao enviar: ' + err.message);
+  }
+}
 function openLightbox(src) {
   document.getElementById('lb-img').src = src;
   document.getElementById('lightbox').classList.add('open');

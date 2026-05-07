@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vistoria · Facilities</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #F2F4F7;
+  --surface: #FFFFFF;
+  --surface2: #F8F9FB;
+  --border: #E4E8EF;
+  --accent: #1C6EF2;
+  --accent-light: #EBF2FF;
+  --danger: #E03E2D;
+  --danger-light: #FEF0EE;
+  --warning: #D97706;
+  --warning-light: #FFFBEB;
+  --ok: #059669;
+  --ok-light: #ECFDF5;
+  --text: #111827;
+  --text2: #6B7280;
+  --text3: #9CA3AF;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overscroll-behavior: none;
+}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.app-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.app-title span { color: var(--accent); }
+.header-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* META CAMPOS */
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.meta-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.meta-input {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  padding: 8px 10px;
+  width: 100%;
+  outline: none;
+  transition: border-color .2s;
+}
+.meta-input:focus { border-color: var(--accent); }
+.meta-input::placeholder { color: var(--text3); }
+.meta-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 3px;
+}
+.meta-field { display: flex; flex-direction: column; }
+
+/* ── PROGRESSO ───────────────────────────────────────────── */
+.progress-bar-wrap {
+  background: var(--surface);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.progress-track {
+  flex: 1;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width .4s ease;
+  width: 0%;
+}
+.progress-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* ── SEÇÕES ──────────────────────────────────────────────── */
+.sections-wrap {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 680px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+.section-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow .2s;
+}
+.section-card:hover { box-shadow: var(--shadow-lg); }
+
+.section-head {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.section-info { flex: 1; min-width: 0; }
+.section-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.2px;
+}
+.section-count {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 1px;
+}
+.section-count .nok-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: 20px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* BOTÃO + */
+.btn-add {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform .15s, background .15s;
+  box-shadow: 0 2px 8px rgba(28,110,242,.35);
+}
+.btn-add:hover  { background: #1559cc; transform: scale(1.08); }
+.btn-add:active { transform: scale(.95); }
+
+/* OCORRÊNCIAS DENTRO DA SEÇÃO */
+.occurrences {
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.occurrences.has-items { display: block; }
+
+.occurrence-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: background .15s;
+  position: relative;
+}
+.occurrence-item:last-child { border-bottom: none; }
+.occurrence-item:hover { background: var(--surface2); }
+
+.occ-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.occ-status-dot.pendente    { background: var(--warning); }
+.occ-status-dot.andamento   { background: var(--accent); }
+.occ-status-dot.concluido   { background: var(--ok); }
+
+.occ-info { flex: 1; min-width: 0; }
+.occ-desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.occ-meta {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.occ-prio {
+  font-weight: 600;
+  font-size: 10px;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.occ-prio.ALTA  { background: var(--danger-light); color: var(--danger); }
+.occ-prio.MÉDIA { background: var(--warning-light); color: var(--warning); }
+.occ-prio.BAIXA { background: var(--ok-light); color: var(--ok); }
+
+.occ-photo-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.occ-edit-hint {
+  font-size: 10px;
+  color: var(--text3);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── BOTTOM BAR ──────────────────────────────────────────── */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+  max-width: 680px;
+  margin: 0 auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.btn-report {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 13px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-report:hover { background: #1559cc; }
+.btn-export-xl {
+  background: var(--ok-light);
+  color: var(--ok);
+  border: 1.5px solid var(--ok);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 13px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.btn-export-xl:hover { background: var(--ok); color: #fff; }
+
+/* ── MODAL FORM ──────────────────────────────────────────── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 50;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.overlay.open { display: flex; }
+
+/* slide-up sheet */
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 680px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 0 0 24px;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+.sheet-header {
+  padding: 16px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.sheet-section-tag {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: none;
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+.btn-close:hover { background: var(--border); }
+
+.sheet-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.form-input {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+  width: 100%;
+  transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--accent); background: #fff; }
+.form-input::placeholder { color: var(--text3); }
+textarea.form-input { resize: vertical; min-height: 72px; }
+
+/* SELETOR PRIORIDADE */
+.priority-btns { display: flex; gap: 8px; }
+.btn-prio {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+  color: var(--text2);
+}
+.btn-prio.active.ALTA  { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+.btn-prio.active.MÉDIA { background: var(--warning-light); border-color: var(--warning); color: var(--warning); }
+.btn-prio.active.BAIXA { background: var(--ok-light); border-color: var(--ok); color: var(--ok); }
+
+/* STATUS OS */
+.status-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-status-os {
+  flex: 1;
+  min-width: 90px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+  color: var(--text2);
+}
+.btn-status-os.active.pendente  { background: var(--warning-light); border-color: var(--warning); color: var(--warning); }
+.btn-status-os.active.andamento { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+.btn-status-os.active.concluido { background: var(--ok-light); border-color: var(--ok); color: var(--ok); }
+
+/* FOTO */
+.photo-zone {
+  display: flex;
+  gap: 8px;
+}
+.photo-btn-cam, .photo-btn-gal {
+  flex: 1;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.photo-btn-cam { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.photo-btn-cam:hover { background: var(--accent); color: #fff; }
+.photo-btn-gal:hover { border-color: var(--text2); color: var(--text); }
+.photo-btn-icon { font-size: 24px; line-height: 1; }
+.photo-previews-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.photo-thumb-form {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: pointer;
+}
+.photo-thumb-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.photo-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.photo-rm {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* SHEET FOOTER */
+.sheet-footer {
+  padding: 0 20px;
+  display: flex;
+  gap: 10px;
+}
+.btn-save {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-save:hover { background: #1559cc; }
+.btn-delete {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: none;
+  transition: all .2s;
+}
+.btn-delete.visible { display: block; }
+.btn-delete:hover { background: var(--danger); color: #fff; }
+
+/* ── MODAL RELATÓRIO ─────────────────────────────────────── */
+.report-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 60;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.report-overlay.open { display: flex; }
+.report-modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.report-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+.report-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.report-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.report-body { padding: 20px 24px; }
+
+.report-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.rchip {
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid;
+}
+.rchip.total   { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+.rchip.danger  { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
+.rchip.ok      { color: var(--ok);     border-color: var(--ok);     background: var(--ok-light); }
+
+.report-section-block { margin-bottom: 20px; }
+.report-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--accent);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.report-occ {
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  border-left: 3px solid var(--danger);
+}
+.report-occ.andamento { border-left-color: var(--accent); }
+.report-occ.concluido { border-left-color: var(--ok); }
+.report-occ-desc { font-size: 13px; font-weight: 600; color: var(--text); }
+.report-occ-meta { font-size: 11px; color: var(--text3); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+.report-occ-note { font-size: 12px; color: var(--text2); margin-top: 4px; font-style: italic; }
+.report-occ-photos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.report-occ-photos img { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
+
+.report-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.btn-pdf {
+  flex: 1;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 13px;
+  cursor: pointer;
+  min-width: 120px;
+}
+.btn-xl {
+  flex: 1;
+  background: var(--ok);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 13px;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+/* LIGHTBOX */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; object-fit: contain; }
+.lb-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,.15);
+  border: none;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-size: 13px;
+}
+.empty-state .big { font-size: 28px; margin-bottom: 8px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@media (min-width: 680px) {
+  .bottom-bar { left: 50%; }
+  .overlay { align-items: center; padding: 20px; }
+  .modal-sheet { border-radius: var(--radius); max-height: 85vh; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-top">
+    <div class="app-title">Vistoria <span>Facilities</span></div>
+    <div class="header-date" id="live-date"></div>
+  </div>
+  <div class="meta-grid" style="margin-bottom:8px;">
+    <div class="meta-field">
+      <span class="meta-label">Galpão / Unidade</span>
+      <input class="meta-input" id="meta-galpao" placeholder="Ex: Galpão 01 – Jarinu">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Inspetor</span>
+      <input class="meta-input" id="meta-inspetor" placeholder="Seu nome">
+    </div>
+  </div>
+  <div class="meta-grid three">
+    <div class="meta-field">
+      <span class="meta-label">Data</span>
+      <input class="meta-input" type="date" id="meta-data">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Turno</span>
+      <select class="meta-input" id="meta-turno">
+        <option value="">Turno</option>
+        <option>Manhã</option><option>Tarde</option><option>Noite</option>
+      </select>
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Tipo</span>
+      <select class="meta-input" id="meta-tipo">
+        <option value="">Tipo</option>
+        <option>Diária</option><option>Semanal</option>
+        <option>Quinzenal</option><option>Mensal</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESSO -->
+<div class="progress-bar-wrap">
+  <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+  <div class="progress-label" id="prog-label">0 ocorrências</div>
+</div>
+
+<!-- SEÇÕES -->
+<div class="sections-wrap" id="sections-root"></div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <button class="btn-export-xl" onclick="exportExcel()">📊 Excel</button>
+  <button class="btn-report" onclick="openReport()">📋 Ver Relatório & PDF</button>
+</div>
+
+<!-- MODAL FORM (slide-up sheet) -->
+<div class="overlay" id="form-overlay" onclick="overlayClick(event)">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="sheet-title">Nova Ocorrência</div>
+        <div class="sheet-section-tag" id="sheet-section-tag"></div>
+      </div>
+      <button class="btn-close" onclick="closeForm()">✕</button>
+    </div>
+    <div class="sheet-body">
+
+      <div class="form-field">
+        <span class="form-label">Setor / Local exato</span>
+        <input class="form-input" id="f-setor" placeholder="Ex: Corredor 4, Banheiro masculino 2...">
+      </div>
+
+      <div class="form-field">
+        <span class="form-label">Descrição da ocorrência</span>
+        <textarea class="form-input" id="f-desc" placeholder="Descreva o problema encontrado..."></textarea>
+      </div>
+
+      <div class="form-field">
+        <span class="form-label">Prioridade</span>
+        <div class="priority-btns">
+          <button class="btn-prio ALTA"  onclick="setPrio('ALTA')" id="prio-ALTA">🔴 Alta</button>
+          <button class="btn-prio MÉDIA active MÉDIA" onclick="setPrio('MÉDIA')" id="prio-MÉDIA">🟡 Média</button>
+          <button class="btn-prio BAIXA" onclick="setPrio('BAIXA')" id="prio-BAIXA">🟢 Baixa</button>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <span class="form-label">Foto da ocorrência</span>
+        <!-- input câmera: capture=environment abre câmera traseira -->
+        <input type="file" accept="image/*" capture="environment" id="f-foto-camera" style="display:none" onchange="handlePhotos(this)">
+        <!-- input galeria: sem capture, abre galeria -->
+        <input type="file" accept="image/*" multiple id="f-foto-galeria" style="display:none" onchange="handlePhotos(this)">
+        <div class="photo-zone">
+          <button type="button" class="photo-btn-cam" onclick="document.getElementById('f-foto-camera').click()">
+            <span class="photo-btn-icon">📷</span>
+            Tirar foto
+          </button>
+          <button type="button" class="photo-btn-gal" onclick="document.getElementById('f-foto-galeria').click()">
+            <span class="photo-btn-icon">🖼️</span>
+            Da galeria
+          </button>
+        </div>
+        <div class="photo-previews-form" id="f-photo-previews"></div>
+      </div>
+
+      <div class="form-field">
+        <span class="form-label">Nº Ordem de Serviço <span style="font-weight:400;color:var(--text3)">(preencher depois)</span></span>
+        <input class="form-input" id="f-os" placeholder="Ex: OS-2026-0042">
+      </div>
+
+      <div class="form-field">
+        <span class="form-label">Situação</span>
+        <div class="status-btns">
+          <button class="btn-status-os pendente active" onclick="setSituacao('pendente')" id="sit-pendente">⏳ Pendente</button>
+          <button class="btn-status-os andamento" onclick="setSituacao('andamento')" id="sit-andamento">🔧 Em andamento</button>
+          <button class="btn-status-os concluido" onclick="setSituacao('concluido')" id="sit-concluido">✓ Concluído</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-delete" id="btn-delete" onclick="deleteOccurrence()">🗑 Excluir</button>
+      <button class="btn-save" onclick="saveOccurrence()">Salvar ocorrência</button>
+    </div>
+  </div>
+</div>
+
+<!-- RELATÓRIO MODAL -->
+<div class="report-overlay" id="report-overlay" onclick="reportOverlayClick(event)">
+  <div class="report-modal">
+    <div class="report-header">
+      <div>
+        <div class="report-title">Relatório de Vistoria</div>
+        <div class="report-subtitle" id="report-meta"></div>
+      </div>
+      <button class="btn-close" onclick="closeReport()">✕</button>
+    </div>
+    <div class="report-body" id="report-body"></div>
+    <div class="report-footer">
+      <button class="btn-xl" onclick="exportExcel()">📊 Exportar Excel</button>
+      <button class="btn-pdf" onclick="exportPDF()">📄 Exportar PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lb-close">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<script>
+// ── DADOS ────────────────────────────────────────────────────────────────
+const SECTIONS = [
+  { id: "logistica",    icon: "🏭", name: "Logística / Armazenagem" },
+  { id: "banheiros",   icon: "🚻", name: "Banheiros" },
+  { id: "vestiarios",  icon: "🧥", name: "Vestiários" },
+  { id: "copa",        icon: "☕", name: "Copa / Refeitório" },
+  { id: "salas",       icon: "🖥️", name: "Salas Administrativas" },
+  { id: "circulacao",  icon: "🚶", name: "Áreas Comuns / Circulação" },
+  { id: "utilidades",  icon: "⚡", name: "Utilidades / Infraestrutura" },
+  { id: "externo",     icon: "🌿", name: "Área Externa / Pátio" },
+];
+
+// occurrences: { [sectionId]: [ {id, setor, desc, prio, situacao, os, photos, createdAt} ] }
+const data = {};
+SECTIONS.forEach(s => data[s.id] = []);
+
+// form state
+let formSectionId = null;
+let formOccId     = null; // null = new, string = editing
+let formPrio      = 'MÉDIA';
+let formSituacao  = 'pendente';
+let formPhotos    = []; // dataUrls
+
+// ── BUILD UI ─────────────────────────────────────────────────────────────
+function buildSections() {
+  const root = document.getElementById('sections-root');
+  SECTIONS.forEach(sec => {
+    const card = document.createElement('div');
+    card.className = 'section-card';
+    card.id = 'card-' + sec.id;
+    card.innerHTML = `
+      <div class="section-head">
+        <span class="section-icon">${sec.icon}</span>
+        <div class="section-info">
+          <div class="section-name">${sec.name}</div>
+          <div class="section-count" id="count-${sec.id}">Nenhuma ocorrência</div>
+        </div>
+        <button class="btn-add" onclick="openForm('${sec.id}')" title="Adicionar ocorrência">+</button>
+      </div>
+      <div class="occurrences" id="occ-${sec.id}"></div>
+    `;
+    root.appendChild(card);
+  });
+}
+
+function refreshSection(secId) {
+  const occs = data[secId];
+  const container = document.getElementById('occ-' + secId);
+  const countEl   = document.getElementById('count-' + secId);
+
+  // count label
+  if (occs.length === 0) {
+    countEl.innerHTML = 'Nenhuma ocorrência';
+  } else {
+    const pend = occs.filter(o => o.situacao === 'pendente').length;
+    const conc = occs.filter(o => o.situacao === 'concluido').length;
+    let html = `${occs.length} ocorrência${occs.length > 1 ? 's' : ''}`;
+    if (pend > 0) html += ` <span class="nok-badge">⚠ ${pend} pendente${pend>1?'s':''}</span>`;
+    countEl.innerHTML = html;
+  }
+
+  // occurrences list
+  container.className = 'occurrences' + (occs.length ? ' has-items' : '');
+  container.innerHTML = '';
+  occs.forEach(occ => {
+    const div = document.createElement('div');
+    div.className = 'occurrence-item';
+    div.onclick = () => openForm(secId, occ.id);
+
+    const thumb = occ.photos.length
+      ? `<img class="occ-photo-thumb" src="${occ.photos[0]}" alt="foto">`
+      : '';
+
+    const prioTag = `<span class="occ-prio ${occ.prio}">${occ.prio}</span>`;
+    const sitLabel = occ.situacao === 'concluido' ? '✓ Concluído'
+                   : occ.situacao === 'andamento' ? '🔧 Em andamento'
+                   : '⏳ Pendente';
+    const osLabel = occ.os ? `· OS: ${occ.os}` : '';
+
+    div.innerHTML = `
+      <div class="occ-status-dot ${occ.situacao}"></div>
+      <div class="occ-info">
+        <div class="occ-desc">${occ.desc || occ.setor || '(sem descrição)'}</div>
+        <div class="occ-meta">
+          ${prioTag}
+          <span>${sitLabel}</span>
+          ${occ.setor ? `<span>📍 ${occ.setor}</span>` : ''}
+          ${occ.os ? `<span>🔖 ${occ.os}</span>` : ''}
+          ${occ.photos.length > 0 ? `<span>📷 ${occ.photos.length}</span>` : ''}
+        </div>
+      </div>
+      ${thumb}
+      <span class="occ-edit-hint">✏</span>
+    `;
+    container.appendChild(div);
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = Object.values(data).reduce((s, a) => s + a.length, 0);
+  const pend  = Object.values(data).reduce((s, a) => s + a.filter(o => o.situacao === 'pendente').length, 0);
+  const conc  = Object.values(data).reduce((s, a) => s + a.filter(o => o.situacao === 'concluido').length, 0);
+  const pct   = total > 0 ? Math.round((conc / total) * 100) : 0;
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent =
+    total === 0 ? '0 ocorrências'
+    : `${total} ocorrência${total>1?'s':''} · ${conc} resolvida${conc>1?'s':''}`;
+}
+
+// ── FORM ─────────────────────────────────────────────────────────────────
+function openForm(secId, occId = null) {
+  formSectionId = secId;
+  formOccId     = occId;
+  const sec = SECTIONS.find(s => s.id === secId);
+
+  document.getElementById('sheet-title').textContent = occId ? 'Editar Ocorrência' : 'Nova Ocorrência';
+  document.getElementById('sheet-section-tag').textContent = sec.icon + ' ' + sec.name;
+
+  const occ = occId ? data[secId].find(o => o.id === occId) : null;
+
+  document.getElementById('f-setor').value = occ ? occ.setor : '';
+  document.getElementById('f-desc').value  = occ ? occ.desc  : '';
+  document.getElementById('f-os').value    = occ ? occ.os    : '';
+
+  formPrio     = occ ? occ.prio     : 'MÉDIA';
+  formSituacao = occ ? occ.situacao : 'pendente';
+  formPhotos   = occ ? [...occ.photos] : [];
+
+  renderPrioBtns();
+  renderSituacaoBtns();
+  renderFormPhotos();
+
+  document.getElementById('btn-delete').classList.toggle('visible', !!occId);
+  document.getElementById('form-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeForm() {
+  document.getElementById('form-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('form-overlay')) closeForm();
+}
+
+function setPrio(val) {
+  formPrio = val;
+  renderPrioBtns();
+}
+function renderPrioBtns() {
+  ['ALTA','MÉDIA','BAIXA'].forEach(p => {
+    const btn = document.getElementById('prio-' + p);
+    btn.className = 'btn-prio ' + p + (formPrio === p ? ' active ' + p : '');
+  });
+}
+
+function setSituacao(val) {
+  formSituacao = val;
+  renderSituacaoBtns();
+}
+function renderSituacaoBtns() {
+  ['pendente','andamento','concluido'].forEach(s => {
+    const btn = document.getElementById('sit-' + s);
+    btn.className = 'btn-status-os ' + s + (formSituacao === s ? ' active' : '');
+  });
+}
+
+function handlePhotos(input) {
+  Array.from(input.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => { formPhotos.push(e.target.result); renderFormPhotos(); };
+    r.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function renderFormPhotos() {
+  const container = document.getElementById('f-photo-previews');
+  container.innerHTML = '';
+  formPhotos.forEach((src, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-thumb-wrap';
+    wrap.innerHTML = `
+      <img src="${src}" onclick="openLightbox('${src}')">
+      <button class="photo-rm" onclick="removeFormPhoto(${idx})">✕</button>
+    `;
+    container.appendChild(wrap);
+  });
+}
+
+function removeFormPhoto(idx) {
+  formPhotos.splice(idx, 1);
+  renderFormPhotos();
+}
+
+function saveOccurrence() {
+  const desc  = document.getElementById('f-desc').value.trim();
+  const setor = document.getElementById('f-setor').value.trim();
+  if (!desc && !setor) {
+    alert('Preencha pelo menos o setor ou a descrição.');
+    return;
+  }
+  const os = document.getElementById('f-os').value.trim();
+
+  if (formOccId) {
+    // edit
+    const occ = data[formSectionId].find(o => o.id === formOccId);
+    Object.assign(occ, { setor, desc, prio: formPrio, situacao: formSituacao, os, photos: [...formPhotos] });
+  } else {
+    // new
+    data[formSectionId].push({
+      id: 'occ-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+      setor, desc, prio: formPrio, situacao: formSituacao, os,
+      photos: [...formPhotos],
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  refreshSection(formSectionId);
+  closeForm();
+}
+
+function deleteOccurrence() {
+  if (!confirm('Excluir esta ocorrência?')) return;
+  data[formSectionId] = data[formSectionId].filter(o => o.id !== formOccId);
+  refreshSection(formSectionId);
+  closeForm();
+}
+
+// ── RELATÓRIO ────────────────────────────────────────────────────────────
+function openReport() {
+  const galpao   = document.getElementById('meta-galpao').value   || '—';
+  const inspetor = document.getElementById('meta-inspetor').value || '—';
+  const data_v   = document.getElementById('meta-data').value     || '—';
+  const turno    = document.getElementById('meta-turno').value    || '—';
+
+  document.getElementById('report-meta').textContent =
+    `${galpao} · ${inspetor} · ${data_v} · Turno: ${turno}`;
+
+  const allOccs  = Object.values(data).flat();
+  const total    = allOccs.length;
+  const pend     = allOccs.filter(o => o.situacao === 'pendente').length;
+  const conc     = allOccs.filter(o => o.situacao === 'concluido').length;
+
+  let html = `<div class="report-chips">
+    <div class="rchip total">Total: ${total}</div>
+    <div class="rchip danger">⏳ Pendentes: ${pend}</div>
+    <div class="rchip ok">✓ Concluídos: ${conc}</div>
+  </div>`;
+
+  if (total === 0) {
+    html += `<div class="empty-state"><div class="big">✅</div>Nenhuma ocorrência registrada nesta vistoria.</div>`;
+  } else {
+    SECTIONS.forEach(sec => {
+      const occs = data[sec.id];
+      if (!occs.length) return;
+      html += `<div class="report-section-block">
+        <div class="report-section-title">${sec.icon} ${sec.name}</div>`;
+      occs.forEach(occ => {
+        const photosHtml = occ.photos.length
+          ? `<div class="report-occ-photos">${occ.photos.map(s => `<img src="${s}" onclick="openLightbox('${s}')">`).join('')}</div>`
+          : '';
+        html += `<div class="report-occ ${occ.situacao}">
+          <div class="report-occ-desc">${occ.desc || '(sem descrição)'}</div>
+          <div class="report-occ-meta">
+            <span class="occ-prio ${occ.prio}" style="font-size:10px;border-radius:4px;padding:1px 6px;font-weight:600;
+              background:${occ.prio==='ALTA'?'var(--danger-light)':occ.prio==='MÉDIA'?'var(--warning-light)':'var(--ok-light)'};
+              color:${occ.prio==='ALTA'?'var(--danger)':occ.prio==='MÉDIA'?'var(--warning)':'var(--ok)'};">${occ.prio}</span>
+            <span>${occ.situacao==='concluido'?'✓ Concluído':occ.situacao==='andamento'?'🔧 Em andamento':'⏳ Pendente'}</span>
+            ${occ.setor  ? `<span>📍 ${occ.setor}</span>`  : ''}
+            ${occ.os     ? `<span>🔖 OS: ${occ.os}</span>` : '<span style="color:#ccc">🔖 OS não informada</span>'}
+            ${occ.photos.length ? `<span>📷 ${occ.photos.length} foto(s)</span>` : ''}
+          </div>
+          ${occ.desc && occ.setor ? `<div class="report-occ-note">📍 ${occ.setor}</div>` : ''}
+          ${photosHtml}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  document.getElementById('report-body').innerHTML = html;
+  document.getElementById('report-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReport() {
+  document.getElementById('report-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function reportOverlayClick(e) {
+  if (e.target === document.getElementById('report-overlay')) closeReport();
+}
+
+// ── EXPORT EXCEL ─────────────────────────────────────────────────────────
+function exportExcel() {
+  const galpao   = document.getElementById('meta-galpao').value   || '';
+  const inspetor = document.getElementById('meta-inspetor').value || '';
+  const data_v   = document.getElementById('meta-data').value     || '';
+  const turno    = document.getElementById('meta-turno').value    || '';
+
+  const rows = [
+    ['Galpão', 'Inspetor', 'Data', 'Turno'],
+    [galpao, inspetor, data_v, turno],
+    [],
+    ['Seção', 'Setor/Local', 'Descrição', 'Prioridade', 'Situação', 'Nº OS', 'Fotos']
+  ];
+
+  SECTIONS.forEach(sec => {
+    data[sec.id].forEach(occ => {
+      rows.push([
+        sec.name,
+        occ.setor,
+        occ.desc,
+        occ.prio,
+        occ.situacao === 'concluido' ? 'Concluído'
+          : occ.situacao === 'andamento' ? 'Em andamento' : 'Pendente',
+        occ.os,
+        occ.photos.length + ' foto(s)'
+      ]);
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [22,22,40,12,16,18,12].map(w => ({wch: w}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Vistoria');
+  XLSX.writeFile(wb, `Vistoria_${galpao || 'Facilities'}_${data_v || 'sem-data'}.xlsx`);
+}
+
+// ── EXPORT PDF ───────────────────────────────────────────────────────────
+function exportPDF() {
+  const galpao   = document.getElementById('meta-galpao').value   || '—';
+  const inspetor = document.getElementById('meta-inspetor').value || '—';
+  const data_v   = document.getElementById('meta-data').value     || '—';
+  const turno    = document.getElementById('meta-turno').value    || '—';
+  const tipo     = document.getElementById('meta-tipo').value     || '—';
+
+  const allOccs = Object.values(data).flat();
+  const total   = allOccs.length;
+  const pend    = allOccs.filter(o => o.situacao === 'pendente').length;
+  const conc    = allOccs.filter(o => o.situacao === 'concluido').length;
+
+  let sectionsHtml = '';
+  SECTIONS.forEach(sec => {
+    const occs = data[sec.id];
+    if (!occs.length) return;
+    sectionsHtml += `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+          color:#1C6EF2;border-bottom:1px solid #E4E8EF;padding-bottom:6px;margin-bottom:10px;">
+          ${sec.icon} ${sec.name}
+        </div>`;
+    occs.forEach(occ => {
+      const prioColor = occ.prio === 'ALTA' ? '#E03E2D' : occ.prio === 'MÉDIA' ? '#D97706' : '#059669';
+      const sitLabel  = occ.situacao === 'concluido' ? '✓ Concluído'
+                      : occ.situacao === 'andamento' ? '🔧 Em andamento' : '⏳ Pendente';
+      const sitColor  = occ.situacao === 'concluido' ? '#059669'
+                      : occ.situacao === 'andamento' ? '#1C6EF2' : '#D97706';
+
+      let photosHtml = '';
+      if (occ.photos.length) {
+        photosHtml = `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">`;
+        occ.photos.forEach(src => {
+          photosHtml += `<img src="${src}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #E4E8EF;">`;
+        });
+        photosHtml += `</div>`;
+      }
+
+      sectionsHtml += `
+        <div style="background:#F8F9FB;border-radius:8px;padding:12px;margin-bottom:8px;
+          border-left:3px solid ${sitColor};">
+          <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:6px;">
+            ${occ.desc || '(sem descrição)'}
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#6B7280;">
+            <span style="background:${prioColor}22;color:${prioColor};border-radius:4px;padding:1px 6px;font-weight:700;">${occ.prio}</span>
+            <span style="color:${sitColor};font-weight:600;">${sitLabel}</span>
+            ${occ.setor ? `<span>📍 ${occ.setor}</span>` : ''}
+            ${occ.os    ? `<span>🔖 OS: <strong>${occ.os}</strong></span>` : '<span style="color:#ccc;">🔖 OS: —</span>'}
+          </div>
+          ${photosHtml}
+        </div>`;
+    });
+    sectionsHtml += `</div>`;
+  });
+
+  if (!sectionsHtml) {
+    sectionsHtml = `<div style="text-align:center;padding:40px;color:#9CA3AF;font-size:14px;">
+      Nenhuma ocorrência registrada nesta vistoria.
+    </div>`;
+  }
+
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <title>Relatório Vistoria – ${galpao}</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; color: #111827; background: #fff; padding: 32px; font-size: 12px; }
+      @media print {
+        body { padding: 16px; }
+        .no-print { display: none; }
+        @page { margin: 16mm; }
+      }
+    </style>
+  </head><body>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #1C6EF2;">
+      <div>
+        <div style="font-size:22px;font-weight:800;color:#111827;letter-spacing:-.5px;">
+          Relatório de Vistoria <span style="color:#1C6EF2;">Facilities</span>
+        </div>
+        <div style="font-size:12px;color:#6B7280;margin-top:4px;">${galpao} · ${inspetor} · ${data_v} · Turno: ${turno} · ${tipo}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:#9CA3AF;">Gerado em ${new Date().toLocaleString('pt-BR')}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:24px;">
+      <div style="padding:8px 16px;background:#EBF2FF;border-radius:8px;font-weight:700;color:#1C6EF2;">Total: ${total}</div>
+      <div style="padding:8px 16px;background:#FEF0EE;border-radius:8px;font-weight:700;color:#E03E2D;">⏳ Pendentes: ${pend}</div>
+      <div style="padding:8px 16px;background:#ECFDF5;border-radius:8px;font-weight:700;color:#059669;">✓ Concluídos: ${conc}</div>
+    </div>
+
+    ${sectionsHtml}
+
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #E4E8EF;font-size:10px;color:#9CA3AF;text-align:center;">
+      Documento gerado pelo sistema de Vistoria Facilities · ${new Date().toLocaleDateString('pt-BR')}
+    </div>
+
+    <div class="no-print" style="text-align:center;margin-top:24px;">
+      <button onclick="window.print()" style="background:#1C6EF2;color:#fff;border:none;border-radius:8px;
+        padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;">🖨 Imprimir / Salvar PDF</button>
+    </div>
+  </body></html>`);
+  printWin.document.close();
+  setTimeout(() => printWin.focus(), 300);
+}
+
+// ── LIGHTBOX ─────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildSections();
+  document.getElementById('meta-data').valueAsDate = new Date();
+  document.getElementById('live-date').textContent =
+    new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+});
+</script>
+</body>
+</html>
